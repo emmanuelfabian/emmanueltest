@@ -1,0 +1,125 @@
+<?php
+include 'includes/sessions.php';
+require('includes/dbconfig.php');
+include('includes/functions.php');
+ $class=new Modules();
+
+
+if(isset($_POST['sendproof'])){
+    
+if (!empty($_FILES)) {
+
+
+     $dir= 'img/uploads/'; 
+    
+   $temp_dir= $_FILES['file']['tmp_name'];                    
+      
+    $targetPath = $dir;
+	
+    $file = $_FILES['file']['name'];
+    $ext = pathinfo($file,PATHINFO_EXTENSION);
+   // $file_name = $shortname.'.'.'jpg';
+     
+    $dest_dir =$targetPath.$file; 
+        
+   
+function resize_img($dir_in,$dir_out,$imedat='defaultname.jpg',$max=250) {
+
+   $img = $dir_in . '/' . $imedat;
+   $extensionse = explode('.', $imedat);
+   $extension =$extensionse[1] ;
+
+   switch ($extension){
+   
+         case 'jpg':
+         case 'jpeg':
+         $image = ImageCreateFromJPEG($img);
+         break;
+               
+         case 'png':
+         $image = ImageCreateFromPNG($img);
+         break;
+               
+         default:
+         $image = false;
+   }
+
+
+if(!$image){
+      // not valid img stop processing
+      return false; 
+}
+
+ $vis = imagesy($image);
+ $sir = imagesx($image);
+
+  if(($vis < $max) && ($sir < $max)) {
+     $nvis=$vis; $nsir=$sir;
+  } else {
+    if($vis > $sir) { $nvis=$max; $nsir=($sir*$max)/$vis;}
+    elseif($vis < $sir) { $nvis=($max*$vis)/$sir; $nsir=$max;}
+    else { $nvis=$max; $nsir=$max;}
+  }
+
+      $out = ImageCreateTrueColor($nsir,$nvis);
+      ImageCopyResampled($out, $image, 0, 0, 0, 0, $nsir, $nvis, $sir, $vis);
+
+   switch ($extension){
+   
+         case 'jpg':
+         case 'jpeg':
+         imageinterlace($out ,1);
+         ImageJPEG($out, $dir_out . '/' . $imedat, 75);
+         break;
+               
+         case 'png':
+         ImagePNG($out, $dir_out . '/' . $imedat);
+         break;
+               
+         default:
+         $out = false;
+   }
+   
+   if(!$out){
+         return false;
+   }
+   
+ImageDestroy($image);
+ImageDestroy($out);
+
+return true;
+}
+		
+if(resize_img($temp_dir,$dest_dir,$file,300)) {
+
+$ipaidmid=$_POST['ipaidmid'];
+$sqlinsert = "UPDATE matches SET pop='$file'  WHERE match_id ='$ipaidmid'";
+$result = mysqli_query($conn,$sqlinsert);
+
+
+
+
+    // ##### time here should be current time, so that the receiver will also  have time to confirm payment
+    // ##### so time1 should be current time and time2 will be time1 + 2hours
+   
+    $sqlipaid = "UPDATE matches SET status =1,payment_status ='Pending' WHERE match_id ='$ipaidmid'";
+    $resultipaid = mysqli_query($conn,$sqlipaid);
+    if($resultipaid){
+        echo "<script>window.open('donate.php','_self')</script>";
+    }
+    
+    
+
+         // add your database code here
+   } else {
+         echo 'Cannot process image.';
+   }
+  
+   
+      
+  
+}
+mysqli_close($conn);
+}
+
+?>  

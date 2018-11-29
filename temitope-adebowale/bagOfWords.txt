@@ -1,0 +1,8 @@
+//Explain the term bag of words
+
+Bag of words is a way of extracting features from text and it does this by counting the frequency of the words in a sentence or document.
+
+A bag of words model is a way of extracting features from text for use in modeling. It is called a bag of words because any information about the order or structure of words in the document is discarded. The model is only concerned with whether known words occur in a sentence or document, not where in the document.
+
+for example:
+1. I am going to the market : Using bag of words model, the sentence becomes I market. The model only picks out the known word and discard the order of words.
